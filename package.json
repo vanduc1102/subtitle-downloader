@@ -1,0 +1,25 @@
+{
+  "name": "subtitle-downloader",
+  "version": "1.0.0",
+  "description": "download subtitles for a list of movies",
+  "main": "index.js",
+  "directories": {
+    "example": "examples",
+    "test": "test"
+  },
+  "scripts": {
+    "test": "test"
+  },
+  "keywords": [
+    "download",
+    "subtitle",
+    "movies"
+  ],
+  "author": "vanducld@gmail.com",
+  "license": "ISC",
+  "dependencies": {
+    "chalk": "^2.4.2",
+    "commander": "^2.19.0",
+    "opensubtitles-api": "^4.0.0"
+  }
+}
