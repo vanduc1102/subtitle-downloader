@@ -21,6 +21,7 @@ coverage/
 # ======================
 public/dist/
 uploads
+downloads
 modules/users/client/img/profile/uploads
 config/env/local.js
 config/env/local-*.js
