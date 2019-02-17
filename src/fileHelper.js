@@ -1,95 +1,143 @@
-const fs = require('fs');
-const fsAsync = require('fs').promises;
-const path = require('path');
-const http = require('http');
-const zlib = require('zlib');
+const fs = require('fs-extra')
+const path = require('path')
+const zlib = require('zlib')
 
 /**
  * List all files in for a given folderPath.
  * @param {string} folderPath
  */
-async function walk(folderPath, extensionRegex) {
-  let results = [];
-  const files = fsAsync.readdir(folderPath);
-  if (err) {
-    return [];
+async function findMoviesRecursive (folderPath, result = []) {
+  const files = await fs.readdir(folderPath)
+
+  if (!files || !files.length) {
+    return []
   }
-  files.forEach(async (file) => {
-    const filePath = path.resolve(folderPath, file);
-    const fileStat = await fsAsync.stat(filePath);
-    if (fileStat && fileStat.isDirectory()) {
-      return walk(filePath, extensionRegex);
-    }
-    if (isMovie(file)) {
-      results.push({
+
+  for (const file of files) {
+    const absolutePath = path.resolve(folderPath, file)
+    const fileStat = await fs.stat(absolutePath)
+
+    if (fileStat &&
+      fileStat.isDirectory() &&
+      !isExcludedFolder(file)) {
+      const subfiles = await findMoviesRecursive(absolutePath)
+      if (subfiles.length) {
+        result = [...result, ...subfiles]
+      }
+    } else if (isMovie(file)) {
+      result.push({
         file,
-        path: filePath
-      });
+        folder: folderPath,
+        absolutePath
+      })
     }
-  });
-};
+  };
 
-async function isFile(path) {
-  const stat = await fs.lstat('test.txt');
-  return stat.isFile();
+  return result
 }
 
-function downloadFile() {
-  let file = fs.createWriteStream("file.jpg");
-  let request = http.get("http://i3.ytimg.com/vi/J---aiyznGQ/mqdefault.jpg", function (response) {
-    response.pipe(file);
-  });
+/**
+ * Check if there is a list of subtitles for movies.
+ * @param {Array} movies object list
+ */
+async function getExistLocalSubtlMovieList (movies) {
+  let result = []
+  for (const movie of movies) {
+    result.push(await getExistLocalSubtlMovie(movie))
+  }
+  return result
 }
 
-function writeString(filePath, strContent) {
+async function getExistLocalSubtlMovie (movieObject) {
+  const files = await fs.readdir(movieObject.folder)
+  const subtitles = []
+
+  for (const file of files) {
+    const filePath = path.resolve(movieObject.folder, file)
+    const fileStat = await fs.stat(filePath)
+    if (fileStat && !fileStat.isDirectory() &&
+      !isMovie(file) &&
+      isSubtitleOfAMovie(movieObject.file, file)) {
+      subtitles.push(file)
+    }
+  }
+
+  return {
+    ...movieObject,
+    subtitles
+  }
+}
+
+function writeString (filePath, strContent) {
   return new Promise((resolve, reject) => {
     fs.writeFile(path.resolve(filePath), strContent, function (err) {
       if (err) {
-        console.log('writeString : ', err);
-        return reject(err);
+        return reject(err)
       }
-      resolve(filePath);
-    });
-  });
+      resolve(filePath)
+    })
+  })
 }
 
-function unZippedBase64(zippedBase64, filePath) {
-  return new Promise((response, reject) => {
-    let bufZipped = new Buffer(zippedBase64, 'base64');
+function unZippedBase64 (zippedBase64, filePath) {
+  return new Promise((resolve, reject) => {
+    let bufZipped = Buffer.from(zippedBase64, 'base64')
     zlib.gunzip(bufZipped, function (err, buf) {
       if (err) {
-        return reject(err);
+        return reject(err)
       }
-      filePath = __createUniquePath(filePath);
-      let stream = fs.createWriteStream(filePath);
-      stream.write(buf);
-      stream.end();
-      stream.on("finish", function () {
-        console.log('saved : ', filePath);
-        return response(filePath);
-      });
+      filePath = __createUniquePath(filePath)
+      let stream = fs.createWriteStream(filePath)
+      stream.write(buf)
+      stream.end()
+      stream.on('finish', function () {
+        console.log('Saved: ', filePath)
+        return resolve(filePath)
+      })
       stream.on('error', (error) => {
-        return reject(error);
-      });
-    });
-  });
+        return reject(error)
+      })
+    })
+  })
 }
 
-function __createUniquePath(absolutePath) {
+function __createUniquePath (absolutePath) {
   if (!fs.existsSync(absolutePath)) {
-    return absolutePath;
+    return absolutePath
   }
-  let extension = absolutePath.substr(absolutePath.lastIndexOf('.'));
-  absolutePath = absolutePath.replace(extension, Date.now() % 10 + extension);
-  return __createUniquePath(absolutePath);
+  let extension = absolutePath.substr(absolutePath.lastIndexOf('.'))
+  absolutePath = absolutePath.replace(extension, Date.now() % 10 + extension)
+  return __createUniquePath(absolutePath)
 }
 
-function checkValidExtensions(fileName, extensionRegex) {
-  return extensionRegex.test(fileName);
+function isMovie (fileName) {
+  return /(.webm|.avi|.mp4|.mkv|.flv|.wmv)$/i.test(fileName)
+}
+
+function isExcludedFolder (folderName) {
+  return /^(node_modules|\.)/i.test(folderName)
+}
+
+function isSubtitleFile (fileName) {
+  return /(.srt|.sub|.sbv)$/i.test(fileName)
+}
+
+function isSubtitleOfAMovie (movieFileName, subtitleFileName) {
+  if (isSubtitleFile(subtitleFileName)) {
+    const movieName = movieFileName
+      .replace(/('.webm|.avi|.mp4|.mkv|.flv|.wmv')$/i, '')
+    return subtitleFileName.includes(movieName)
+  }
+  return false
+}
+
+async function getMoviesAndSubtitles (folderPath) {
+  const movies = await findMoviesRecursive(folderPath)
+  return getExistLocalSubtlMovieList(movies)
 }
 
 module.exports = {
-  walk,
+  getMoviesAndSubtitles,
   unZippedBase64,
   writeString
 }
