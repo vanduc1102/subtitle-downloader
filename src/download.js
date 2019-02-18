@@ -1,6 +1,11 @@
 'use strict'
+const debug = require('debug')('download')
 const fileHelper = require('./file-helper')
 const OpenSubtitles = require('./os-api')
+const CONST = require('./constants')
+const {
+  put
+} = require('./cache-file')
 
 /**
  * Download subtitle
@@ -15,40 +20,57 @@ async function download (folders, languages = ['eng'], user, pass) {
 }
 
 async function downloadFolder (folderPath, languages, user, pass) {
-  let movieObjects = await fileHelper.getMoviesAndSubtitles(folderPath)
+  const movieObjects = await fileHelper.getMoviesAndSubtitles(folderPath)
   let moviesHasSubtitle = []
-  movieObjects = movieObjects.filter(m => {
-    if (m.subtitles && m.subtitles.length === 0) {
-      return true
-    }
-    moviesHasSubtitle.push(m.file)
-    return false
-  })
-  console.log('List movies have subtile:\n', moviesHasSubtitle)
-  console.log('Searching subtitle for movies:\n', movieObjects.map(m => m.file))
-  const listAbsMoviePath = movieObjects.map(m => m.absolutePath)
-  const moviesInfoList = await OpenSubtitles.getHashs(listAbsMoviePath)
-  let listMovieHashed = []
-  moviesInfoList.forEach(movieInfoItem => {
-    languages.forEach(langId => {
-      listMovieHashed.push({
-        sublanguageid: langId,
-        moviehash: movieInfoItem.moviehash,
-        moviebytesize: movieInfoItem.moviebytesize
+  let movieNeedSubtitlesMap = new Map()
+  movieObjects.forEach(m => {
+    const missingLanguages = findMissingSubtitle(m, languages)
+    if (missingLanguages && missingLanguages.length) {
+      movieNeedSubtitlesMap.set(m.absolutePath, {
+        ...m,
+        missingLanguages
       })
-    })
+    } else {
+      moviesHasSubtitle.push(m.file)
+    }
   })
 
-  const searchResponse = await OpenSubtitles.SearchSubtitles(listMovieHashed, user, pass)
+  console.log('List movies have subtile:\n', moviesHasSubtitle)
 
-  if (!searchResponse.data || searchResponse.data.length === 0) {
-    console.log('Not found any subtitle.')
+  const movieNeedSubtitleList = Array.from(movieNeedSubtitlesMap).map(kv => kv[1])
+  console.log('Searching subtitle for movies:\n',
+    movieNeedSubtitleList.map(item => item.file))
+  if (!movieNeedSubtitleList.length) {
+    console.log('Subtitles are ready, no need to search.')
+    process.exit(0)
+  }
+
+  const movieHashedList = await OpenSubtitles.getHashs(movieNeedSubtitleList)
+  let listMovieHashed = []
+  movieHashedList.forEach(movieHash => {
+    const movie = movieNeedSubtitlesMap.get(movieHash.absoluteFile)
+    if (movie.missingLanguages && movie.missingLanguages.length) {
+      listMovieHashed.push({
+        sublanguageid: movie.missingLanguages.join(','),
+        moviehash: movieHash.moviehash,
+        moviebytesize: movieHash.moviebytesize,
+        filename: movieHash.filename
+      })
+    }
+  })
+  debug('listMovieHashed:', listMovieHashed)
+  const searchResponse = await OpenSubtitles.SearchSubtitles(listMovieHashed, user, pass)
+  debug('Search result: ', searchResponse)
+  if (!searchResponse || !searchResponse.status.includes('200')) {
+    await isUnAuthorized(searchResponse)
+    console.log('Error', searchResponse)
     return
   }
+
   let subDescList = __filterByBestScore(searchResponse.data)
   let subDescListFiltered = []
   for (let subDesc of subDescList) {
-    let movie = moviesInfoList.find(movie => movie.moviehash === subDesc.MovieHash)
+    let movie = movieHashedList.find(movie => movie.moviehash === subDesc.MovieHash)
     if (movie) {
       subDesc.absoluteFile = movie.absoluteFile
       subDescListFiltered.push(subDesc)
@@ -56,8 +78,8 @@ async function downloadFolder (folderPath, languages, user, pass) {
   };
 
   let subIds = subDescListFiltered.map(subtitle => subtitle.IDSubtitleFile)
-
   const subtitlesDataResponse = await OpenSubtitles.DownloadSubtitles(subIds, user, pass)
+  await isUnAuthorized(subtitlesDataResponse)
   let subs = __buildSubFileName(subtitlesDataResponse.data, subDescListFiltered)
   for (let sub of subs) {
     await fileHelper.unZippedBase64(sub.data, sub.absoluteFile)
@@ -90,15 +112,40 @@ function __createSubFileName (subDesc) {
 function __filterByBestScore (subDescList) {
   let bestSubOfMovieMap = {}
   for (let subDesc of subDescList) {
-    if (bestSubOfMovieMap[subDesc.MovieHash]) {
-      if (subDesc.Score > bestSubOfMovieMap[subDesc.MovieHash]['Score']) {
-        bestSubOfMovieMap[subDesc.MovieHash] = subDesc
+    const hasKey = `${subDesc.MovieHash}-${subDesc.SubLanguageID}`
+    if (bestSubOfMovieMap[hasKey]) {
+      if (subDesc.Score > bestSubOfMovieMap[hasKey]['Score']) {
+        bestSubOfMovieMap[hasKey] = subDesc
       }
     } else {
-      bestSubOfMovieMap[subDesc.MovieHash] = subDesc
+      bestSubOfMovieMap[hasKey] = subDesc
     }
   }
   return Object.keys(bestSubOfMovieMap).map(key => bestSubOfMovieMap[key])
+}
+
+function findMissingSubtitle (movieObject, languages) {
+  if (!movieObject.subtitles.length) {
+    return languages.slice()
+  }
+  if (languages[0] === 'all') {
+    return Object.keys(CONST.languages)
+  }
+  const filteredLang = languages.filter((lang) => {
+    const foundSubtitle = movieObject.subtitles.filter((sub) => {
+      return sub.includes(`.${lang}.`)
+    })
+    return !foundSubtitle.length
+  })
+  return filteredLang
+}
+
+async function isUnAuthorized (response) {
+  if (response && response.status.includes('401')) {
+    await put('token', '')
+    console.log('Unauthorized, Please rerun command with user and password.')
+    process.exit(1)
+  }
 }
 
 module.exports = {

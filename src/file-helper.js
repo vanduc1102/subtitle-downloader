@@ -119,7 +119,7 @@ function __createUniquePath (absolutePath) {
     return absolutePath
   }
   let extension = absolutePath.substr(absolutePath.lastIndexOf('.'))
-  absolutePath = absolutePath.replace(extension, Date.now() % 10 + extension)
+  absolutePath = absolutePath.replace(extension, `.${Date.now() % 100}${extension}`)
   return __createUniquePath(absolutePath)
 }
 

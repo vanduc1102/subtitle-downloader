@@ -1,5 +1,7 @@
 const OS = require('opensubtitles-api')
 const crypto = require('crypto')
+const debug = require('debug')('os-api')
+
 const { put, get } = require('./cache-file')
 const userDefaultLang = 'en'
 
@@ -23,7 +25,7 @@ function getUserAgent () {
 async function getToken (user = '', pass = '') {
   const token = await get('token')
   if (token) {
-    console.log('Access token is cached.')
+    debug('Access token is cached.')
     return Promise.resolve(token)
   }
   try {
@@ -68,16 +70,24 @@ async function DownloadSubtitles (subtitleIds, user, pass) {
 }
 /**
  *
- * @param {Array} files array of full file path.
+ * @param {Array} movieFiles array of movieFile object contains absolute file path
+ * and file name
  */
-function getHashs (files) {
-  let getHashPromises = files.map(absoluteFile => __getHash(absoluteFile))
+function getHashs (movieFiles) {
+  if (movieFiles && !movieFiles.length) {
+    return []
+  }
+  let getHashPromises = movieFiles.map(movieFile => __getHash(movieFile))
   return Promise.all(getHashPromises)
 }
-
-function __getHash (absoluteFile) {
-  return OpenSubtitles.hash(absoluteFile).then(response => {
-    response.absoluteFile = absoluteFile
+/**
+ *
+ * @param {Object} movieFile movieFile object contains absolutePath and fileName
+ */
+function __getHash (movieFile) {
+  return OpenSubtitles.hash(movieFile.absolutePath).then(response => {
+    response.absoluteFile = movieFile.absolutePath
+    response.filename = movieFile.file
     return response
   }, reason => reason)
 }
