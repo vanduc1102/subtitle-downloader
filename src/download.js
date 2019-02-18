@@ -1,20 +1,20 @@
 'use strict'
-const fileHelper = require('./fileHelper')
-const OpenSubtitles = require('./osApi')
+const fileHelper = require('./file-helper')
+const OpenSubtitles = require('./os-api')
 
 /**
  * Download subtitle
  * @param {Array} folders List of directory
  * @param {Array} languages List of languageCode, E.g: eng, vie
  */
-async function download (folders, languages = ['eng']) {
-  console.log('Downloading subtitles for movies in folder: ', folders, ' for languages: ', languages)
+async function download (folders, languages = ['eng'], user, pass) {
+  console.log('Downloading subtitles for movies:\n\tfolder: ', folders, '\n\tlanguages: ', languages)
   for (const folder of folders) {
-    await downloadFolder(folder, languages)
+    await downloadFolder(folder, languages, user, pass)
   }
 }
 
-async function downloadFolder (folderPath, languages) {
+async function downloadFolder (folderPath, languages, user, pass) {
   let movieObjects = await fileHelper.getMoviesAndSubtitles(folderPath)
   let moviesHasSubtitle = []
   movieObjects = movieObjects.filter(m => {
@@ -24,8 +24,8 @@ async function downloadFolder (folderPath, languages) {
     moviesHasSubtitle.push(m.file)
     return false
   })
-  console.log('List movies have subtile:', moviesHasSubtitle)
-  console.log('Searching subtitle for movies: ', movieObjects.map(m => m.file))
+  console.log('List movies have subtile:\n', moviesHasSubtitle)
+  console.log('Searching subtitle for movies:\n', movieObjects.map(m => m.file))
   const listAbsMoviePath = movieObjects.map(m => m.absolutePath)
   const moviesInfoList = await OpenSubtitles.getHashs(listAbsMoviePath)
   let listMovieHashed = []
@@ -39,10 +39,10 @@ async function downloadFolder (folderPath, languages) {
     })
   })
 
-  const searchResponse = await OpenSubtitles.SearchSubtitles(listMovieHashed)
+  const searchResponse = await OpenSubtitles.SearchSubtitles(listMovieHashed, user, pass)
 
   if (!searchResponse.data || searchResponse.data.length === 0) {
-    console.log('Not found any subtitle')
+    console.log('Not found any subtitle.')
     return
   }
   let subDescList = __filterByBestScore(searchResponse.data)
@@ -57,7 +57,7 @@ async function downloadFolder (folderPath, languages) {
 
   let subIds = subDescListFiltered.map(subtitle => subtitle.IDSubtitleFile)
 
-  const subtitlesDataResponse = await OpenSubtitles.DownloadSubtitles(subIds)
+  const subtitlesDataResponse = await OpenSubtitles.DownloadSubtitles(subIds, user, pass)
   let subs = __buildSubFileName(subtitlesDataResponse.data, subDescListFiltered)
   for (let sub of subs) {
     await fileHelper.unZippedBase64(sub.data, sub.absoluteFile)
@@ -65,6 +65,9 @@ async function downloadFolder (folderPath, languages) {
 }
 
 function __buildSubFileName (subDataList, subDescList) {
+  if (!subDataList || subDataList.length === 0) {
+    return []
+  }
   let subtitleList = subDataList.map(subData => {
     let subDesc = subDescList.find(subDesc => subDesc.IDSubtitleFile === subData.idsubtitlefile)
     return {

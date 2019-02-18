@@ -8,10 +8,18 @@ program
   .option('-u, --user [value]', 'OpenSubtitle username')
   .option('-p, --pass  [value]', 'OpenSubtitle password')
   .action(callDownload)
-  .parse(process.argv)
+
+program.on('--help', function () {
+  console.log('')
+  console.log('Examples:')
+  console.log('  $ subtitle-downloader download ~/Downloads -l eng,vie -u user -p password')
+  console.log('  $ subtitle-downloader download ~/Downloads -l eng,vie')
+})
+
+program.parse(process.argv)
 
 async function callDownload (directory, options) {
   const langs = options.lang ? options.lang.split(',') : ['eng']
   const directories = [directory]
-  await download(directories, langs)
+  await download(directories, langs, options.user, options.pass)
 }

@@ -70,11 +70,24 @@ async function getExistLocalSubtlMovie (movieObject) {
 
 function writeString (filePath, strContent) {
   return new Promise((resolve, reject) => {
-    fs.writeFile(path.resolve(filePath), strContent, function (err) {
+    fs.writeFile(path.resolve(filePath), strContent, {
+      flag: 'w+'
+    }, function (err) {
       if (err) {
         return reject(err)
       }
       resolve(filePath)
+    })
+  })
+}
+
+async function readString (filePath) {
+  return new Promise((resolve, reject) => {
+    fs.readFile(filePath, 'utf8', function (error, data) {
+      if (error) {
+        return resolve(null)
+      }
+      return resolve(data)
     })
   })
 }
@@ -139,5 +152,6 @@ async function getMoviesAndSubtitles (folderPath) {
 module.exports = {
   getMoviesAndSubtitles,
   unZippedBase64,
-  writeString
+  writeString,
+  readString
 }
