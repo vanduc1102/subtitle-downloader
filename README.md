@@ -2,11 +2,11 @@
 
 ### Download
 ```
-./index.js download --help
+./subtitle-downloader download --help
 ```
 
 Basic command example:
 
 ```
-./index.js download ~/Download -l eng,vie
+./subtitle-downloader download ~/Download -l eng,vie
 ```
