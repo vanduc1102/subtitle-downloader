@@ -19,7 +19,12 @@ program.on('--help', function () {
 program.parse(process.argv)
 
 async function callDownload (directory, options) {
-  const langs = options.lang ? options.lang.split(',') : ['eng']
-  const directories = [directory]
-  await download(directories, langs, options.user, options.pass)
+  try {
+    const langs = options.lang ? options.lang.split(',') : ['eng']
+    const directories = [directory]
+    await download(directories, langs, options.user, options.pass)
+  } catch (ex) {
+    console.error(ex)
+    console.log('Something wrong, please try: \n$ subtitle-downloader download --help')
+  }
 }
