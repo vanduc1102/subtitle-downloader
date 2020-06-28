@@ -47,6 +47,7 @@ app.log
 *.tmp
 *.bak
 *.swp
+test.bash
 logs/
 build/
 
