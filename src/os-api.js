@@ -19,7 +19,7 @@ function encryptMd5 (str) {
 }
 
 function getUserAgent () {
-  return 'TemporaryUserAgent'
+  return 'cli-subtitle-downloader v1.0'
 }
 
 async function getToken (user = '', pass = '') {
