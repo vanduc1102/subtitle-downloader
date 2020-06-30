@@ -24,8 +24,8 @@ async function download (folders, languages = ['eng'], user, pass) {
 
 async function downloadFolder (folderPath, languages, user, pass) {
   const movieObjects = await fileHelper.getMoviesAndSubtitles(folderPath)
-  let moviesHasSubtitle = []
-  let movieNeedSubtitlesMap = new Map()
+  const moviesHasSubtitle = []
+  const movieNeedSubtitlesMap = new Map()
   movieObjects.forEach((m) => {
     const missingLanguages = findMissingSubtitle(m, languages)
     if (missingLanguages && missingLanguages.length) {
@@ -54,7 +54,7 @@ async function downloadFolder (folderPath, languages, user, pass) {
   }
 
   const movieHashedList = await OpenSubtitles.getHashs(movieNeedSubtitleList)
-  let listMovieHashed = []
+  const listMovieHashed = []
   movieHashedList.forEach((movieHash) => {
     const movie = movieNeedSubtitlesMap.get(movieHash.absoluteFile)
     if (movie.missingLanguages && movie.missingLanguages.length) {
@@ -62,8 +62,7 @@ async function downloadFolder (folderPath, languages, user, pass) {
         sublanguageid: movie.missingLanguages.join(','),
         moviehash: movieHash.moviehash,
         moviebytesize: movieHash.moviebytesize,
-        filename: __fileNameToText(movieHash.filename),
-        query: __fileNameToText(movieHash.filename)
+        filename: __fileNameToText(movieHash.filename)
       })
     }
   })
@@ -79,10 +78,10 @@ async function downloadFolder (folderPath, languages, user, pass) {
     console.log('Error', searchResponse)
   }
 
-  let subDescList = __filterByBestScore(searchResponse.data)
-  let subDescListFiltered = []
-  for (let subDesc of subDescList) {
-    let movie = movieHashedList.find(
+  const subDescList = searchResponse.data ? __filterByBestScore(searchResponse.data) : []
+  const subDescListFiltered = []
+  for (const subDesc of subDescList) {
+    const movie = movieHashedList.find(
       (movie) => movie.moviehash === subDesc.MovieHash
     )
     if (movie) {
@@ -91,18 +90,18 @@ async function downloadFolder (folderPath, languages, user, pass) {
     }
   }
 
-  let subIds = subDescListFiltered.map((subtitle) => subtitle.IDSubtitleFile)
+  const subIds = subDescListFiltered.map((subtitle) => subtitle.IDSubtitleFile)
   const subtitlesDataResponse = await OpenSubtitles.DownloadSubtitles(
     subIds,
     user,
     pass
   )
   await isUnAuthorized(subtitlesDataResponse)
-  let subs = __buildSubFileName(
+  const subs = __buildSubFileName(
     subtitlesDataResponse.data,
     subDescListFiltered
   )
-  for (let sub of subs) {
+  for (const sub of subs) {
     await fileHelper.unZippedBase64(sub.data, sub.absoluteFile)
   }
 }
@@ -111,16 +110,15 @@ function __fileNameToText (filename) {
   return filename.replace('.mkv', '')
     .replace('.mp4', '')
     .replace('.avi', '')
-    .replace(' - ', ' ')
-    .replace(/(\.|_)/g, ' ')
+    .replace(/(\.|_|\s-\s)/g, ' ')
 }
 
 function __buildSubFileName (subDataList, subDescList) {
   if (!subDataList || subDataList.length === 0) {
     return []
   }
-  let subtitleList = subDataList.map((subData) => {
-    let subDesc = subDescList.find(
+  const subtitleList = subDataList.map((subData) => {
+    const subDesc = subDescList.find(
       (subDesc) => subDesc.IDSubtitleFile === subData.idsubtitlefile
     )
     return {
@@ -132,11 +130,11 @@ function __buildSubFileName (subDataList, subDescList) {
 }
 
 function __createSubFileName (subDesc) {
-  let movieFileName = subDesc.absoluteFile
+  const movieFileName = subDesc.absoluteFile
   if (!movieFileName) {
     return subDesc.SubFileName
   }
-  let movieExtension = subDesc.absoluteFile.substr(
+  const movieExtension = subDesc.absoluteFile.substr(
     movieFileName.lastIndexOf('.')
   )
   return movieFileName.replace(
@@ -146,11 +144,11 @@ function __createSubFileName (subDesc) {
 }
 
 function __filterByBestScore (subDescList) {
-  let bestSubOfMovieMap = {}
-  for (let subDesc of subDescList) {
+  const bestSubOfMovieMap = {}
+  for (const subDesc of subDescList) {
     const hasKey = `${subDesc.MovieHash}-${subDesc.SubLanguageID}`
     if (bestSubOfMovieMap[hasKey]) {
-      if (subDesc.Score > bestSubOfMovieMap[hasKey]['Score']) {
+      if (subDesc.Score > bestSubOfMovieMap[hasKey].Score) {
         bestSubOfMovieMap[hasKey] = subDesc
       }
     } else {

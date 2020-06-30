@@ -41,7 +41,7 @@ async function findMoviesRecursive (folderPath, result = []) {
  * @param {Array} movies object list
  */
 async function getExistLocalSubtlMovieList (movies) {
-  let result = []
+  const result = []
   for (const movie of movies) {
     result.push(await getExistLocalSubtlMovie(movie))
   }
@@ -94,13 +94,13 @@ async function readString (filePath) {
 
 function unZippedBase64 (zippedBase64, filePath) {
   return new Promise((resolve, reject) => {
-    let bufZipped = Buffer.from(zippedBase64, 'base64')
+    const bufZipped = Buffer.from(zippedBase64, 'base64')
     zlib.gunzip(bufZipped, function (err, buf) {
       if (err) {
         return reject(err)
       }
       filePath = __createUniquePath(filePath)
-      let stream = fs.createWriteStream(filePath)
+      const stream = fs.createWriteStream(filePath)
       stream.write(buf)
       stream.end()
       stream.on('finish', function () {
@@ -118,7 +118,7 @@ function __createUniquePath (absolutePath) {
   if (!fs.existsSync(absolutePath)) {
     return absolutePath
   }
-  let extension = absolutePath.substr(absolutePath.lastIndexOf('.'))
+  const extension = absolutePath.substr(absolutePath.lastIndexOf('.'))
   absolutePath = absolutePath.replace(extension, `.${Date.now() % 100}${extension}`)
   return __createUniquePath(absolutePath)
 }

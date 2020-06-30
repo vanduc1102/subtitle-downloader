@@ -77,7 +77,7 @@ function getHashs (movieFiles) {
   if (movieFiles && !movieFiles.length) {
     return []
   }
-  let getHashPromises = movieFiles.map(movieFile => __getHash(movieFile))
+  const getHashPromises = movieFiles.map(movieFile => __getHash(movieFile))
   return Promise.all(getHashPromises)
 }
 /**
