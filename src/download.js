@@ -110,6 +110,12 @@ function __fileNameToText (filename) {
   return filename.replace('.mkv', '')
     .replace('.mp4', '')
     .replace('.avi', '')
+    .replace(/-GalaxyTV/i, '')
+    .replace(/-\[YTS.*\]/i, '')
+    .replace(/-strife/i, '')
+    .replace(/\.AAC5\.1/i, '')
+    .replace(/\(.+\)/i, '')
+    .replace(/-DL\.DDP2\.0\.H\.264-NTG/i, '')
     .replace(/(\.|_|\s-\s)/g, ' ')
 }
 
