@@ -12,9 +12,9 @@ const { put } = require('./cache-file')
  */
 async function download (folders, languages = ['eng'], user, pass) {
   console.log(
-    'Downloading subtitles for movies:\n\tfolder: ',
+    'Downloading subtitles for movies:\nFolder:\n',
     folders,
-    '\n\tlanguages: ',
+    '\nLanguages:\n',
     languages
   )
   for (const folder of folders) {
@@ -114,6 +114,8 @@ function __fileNameToText (filename) {
     .replace(/-\[YTS.*\]/i, '')
     .replace(/-strife/i, '')
     .replace(/\.AAC5\.1/i, '')
+    .replace(/HEVC-Vyndros/i, '')
+    .replace(/XviD\.AC3-EVO/i, '')
     .replace(/\(.+\)/i, '')
     .replace(/-DL\.DDP2\.0\.H\.264-NTG/i, '')
     .replace(/(\.|_|\s-\s)/g, ' ')
