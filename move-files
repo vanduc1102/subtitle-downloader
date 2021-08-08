@@ -2,7 +2,7 @@
 
 const program = require('commander')
 const { resolve, extname, basename, join } = require('path')
-const { readdir, rename } = require('fs-extra')
+const { readdir, rename } = require('fs').promises;
 
 program
   .option(
@@ -21,7 +21,7 @@ program.on('--help', function () {
   moveFiles(program.args, program.options)
 })()
 
-async function moveFiles (directories, options) {
+async function moveFiles(directories, options) {
   const extensions = options.ext
     ? options.ext.split('')
     : ['.mp4', '.srt', '.avi', '.mkv']
@@ -41,10 +41,10 @@ async function moveFiles (directories, options) {
   )
 }
 
-async function getFiles (dir) {
-  const dirents = await readdir(dir, { withFileTypes: true })
+async function getFiles(dir) {
+  const directoryList = await readdir(dir, { withFileTypes: true })
   const files = await Promise.all(
-    dirents.map((dirent) => {
+    directoryList.map((dirent) => {
       const res = resolve(dir, dirent.name)
       return dirent.isDirectory() ? getFiles(res) : res
     })
@@ -52,7 +52,7 @@ async function getFiles (dir) {
   return Array.prototype.concat(...files)
 }
 
-function filterValidFiles (files, extensions) {
+function filterValidFiles(files, extensions) {
   return files.filter((f) => {
     if (typeof f !== 'string') {
       return false

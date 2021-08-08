@@ -1,4 +1,5 @@
-const fs = require('fs-extra')
+const fs = require('fs')
+const fsPromise = fs.promises;
 const path = require('path')
 const zlib = require('zlib')
 
@@ -7,7 +8,7 @@ const zlib = require('zlib')
  * @param {string} folderPath
  */
 async function findMoviesRecursive(folderPath, result = []) {
-  const files = await fs.readdir(folderPath)
+  const files = await fsPromise.readdir(folderPath)
 
   if (!files || !files.length) {
     return []
@@ -15,7 +16,7 @@ async function findMoviesRecursive(folderPath, result = []) {
 
   for (const file of files) {
     const absolutePath = path.resolve(folderPath, file)
-    const fileStat = await fs.stat(absolutePath)
+    const fileStat = await fsPromise.stat(absolutePath)
 
     if (fileStat &&
       fileStat.isDirectory() &&
@@ -49,12 +50,12 @@ async function getExistLocalSubtlMovieList(movies) {
 }
 
 async function getExistLocalSubtlMovie(movieObject) {
-  const files = await fs.readdir(movieObject.folder)
+  const files = await fsPromise.readdir(movieObject.folder)
   const subtitles = []
 
   for (const file of files) {
     const filePath = path.resolve(movieObject.folder, file)
-    const fileStat = await fs.stat(filePath)
+    const fileStat = await fsPromise.stat(filePath)
     if (fileStat && !fileStat.isDirectory() &&
       !isMovie(file) &&
       isSubtitleOfAMovie(movieObject.file, file)) {
