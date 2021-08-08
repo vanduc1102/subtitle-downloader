@@ -62,7 +62,7 @@ async function downloadFolder (folderPath, languages, user, pass) {
         sublanguageid: movie.missingLanguages.join(','),
         moviehash: movieHash.moviehash,
         moviebytesize: movieHash.moviebytesize,
-        filename: __fileNameToText(movieHash.filename)
+        filename: fileHelper.fileNameToText(movieHash.filename)
       })
     }
   })
@@ -104,21 +104,6 @@ async function downloadFolder (folderPath, languages, user, pass) {
   for (const sub of subs) {
     await fileHelper.unZippedBase64(sub.data, sub.absoluteFile)
   }
-}
-
-function __fileNameToText (filename) {
-  return filename.replace('.mkv', '')
-    .replace('.mp4', '')
-    .replace('.avi', '')
-    .replace(/-GalaxyTV/i, '')
-    .replace(/-\[YTS.*\]/i, '')
-    .replace(/-strife/i, '')
-    .replace(/\.AAC5\.1/i, '')
-    .replace(/HEVC-Vyndros/i, '')
-    .replace(/XviD\.AC3-EVO/i, '')
-    .replace(/\(.+\)/i, '')
-    .replace(/-DL\.DDP2\.0\.H\.264-NTG/i, '')
-    .replace(/(\.|_|\s-\s)/g, ' ')
 }
 
 function __buildSubFileName (subDataList, subDescList) {

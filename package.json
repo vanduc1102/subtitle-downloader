@@ -9,7 +9,7 @@
   },
   "scripts": {
     "lint": "node_modules/.bin/eslint .",
-    "test": "test"
+    "test": "jest"
   },
   "keywords": [
     "download",
@@ -21,17 +21,19 @@
   "dependencies": {
     "chalk": "^2.4.2",
     "commander": "^5.1.0",
-    "debug": "^4.1.1",
+    "debug": "^4.3.2",
     "fs-extra": "^7.0.1",
     "opensubtitles-api": "^5.1.2",
     "tmp": "0.0.33"
   },
   "devDependencies": {
-    "eslint": "^7.3.1",
+    "eslint": "^7.32.0",
     "eslint-config-standard": "^14.1.1",
-    "eslint-plugin-import": "^2.22.0",
+    "eslint-plugin-import": "^2.23.4",
+    "eslint-plugin-jest": "^24.4.0",
     "eslint-plugin-node": "^11.1.0",
-    "eslint-plugin-promise": "^4.2.1",
-    "eslint-plugin-standard": "^4.0.1"
+    "eslint-plugin-promise": "^4.3.1",
+    "eslint-plugin-standard": "^4.1.0",
+    "jest": "^27.0.6"
   }
 }

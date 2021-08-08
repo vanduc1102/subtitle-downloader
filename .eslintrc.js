@@ -1,3 +1,5 @@
 module.exports = {
-    "extends": "standard"
+  root: true,
+  "plugins": ["jest"],
+  "extends": "standard"
 };
