@@ -1,5 +1,5 @@
 const fs = require('fs')
-const fsPromise = fs.promises;
+const fsPromise = fs.promises
 const path = require('path')
 const zlib = require('zlib')
 
@@ -7,7 +7,7 @@ const zlib = require('zlib')
  * List all files in for a given folderPath.
  * @param {string} folderPath
  */
-async function findMoviesRecursive(folderPath, result = []) {
+async function findMoviesRecursive (folderPath, result = []) {
   const files = await fsPromise.readdir(folderPath)
 
   if (!files || !files.length) {
@@ -41,7 +41,7 @@ async function findMoviesRecursive(folderPath, result = []) {
  * Check if there is a list of subtitles for movies.
  * @param {Array} movies object list
  */
-async function getExistLocalSubtlMovieList(movies) {
+async function getExistLocalSubtlMovieList (movies) {
   const result = []
   for (const movie of movies) {
     result.push(await getExistLocalSubtlMovie(movie))
@@ -49,7 +49,7 @@ async function getExistLocalSubtlMovieList(movies) {
   return result
 }
 
-async function getExistLocalSubtlMovie(movieObject) {
+async function getExistLocalSubtlMovie (movieObject) {
   const files = await fsPromise.readdir(movieObject.folder)
   const subtitles = []
 
@@ -69,7 +69,7 @@ async function getExistLocalSubtlMovie(movieObject) {
   }
 }
 
-function writeString(filePath, strContent) {
+function writeString (filePath, strContent) {
   return new Promise((resolve, reject) => {
     fs.writeFile(path.resolve(filePath), strContent, {
       flag: 'w+'
@@ -82,7 +82,7 @@ function writeString(filePath, strContent) {
   })
 }
 
-async function readString(filePath) {
+async function readString (filePath) {
   return new Promise((resolve, reject) => {
     fs.readFile(filePath, 'utf8', function (error, data) {
       if (error) {
@@ -93,7 +93,7 @@ async function readString(filePath) {
   })
 }
 
-function unZippedBase64(zippedBase64, filePath) {
+function unZippedBase64 (zippedBase64, filePath) {
   return new Promise((resolve, reject) => {
     const bufZipped = Buffer.from(zippedBase64, 'base64')
     zlib.gunzip(bufZipped, function (err, buf) {
@@ -115,7 +115,7 @@ function unZippedBase64(zippedBase64, filePath) {
   })
 }
 
-function __createUniquePath(absolutePath) {
+function __createUniquePath (absolutePath) {
   if (!fs.existsSync(absolutePath)) {
     return absolutePath
   }
@@ -124,19 +124,19 @@ function __createUniquePath(absolutePath) {
   return __createUniquePath(absolutePath)
 }
 
-function isMovie(fileName) {
+function isMovie (fileName) {
   return /(.webm|.avi|.mp4|.mkv|.flv|.wmv)$/i.test(fileName)
 }
 
-function isExcludedFolder(folderName) {
+function isExcludedFolder (folderName) {
   return /^(node_modules|\.)/i.test(folderName)
 }
 
-function isSubtitleFile(fileName) {
+function isSubtitleFile (fileName) {
   return /(.srt|.sub|.sbv)$/i.test(fileName)
 }
 
-function isSubtitleOfAMovie(movieFileName, subtitleFileName) {
+function isSubtitleOfAMovie (movieFileName, subtitleFileName) {
   if (isSubtitleFile(subtitleFileName)) {
     const movieName = movieFileName
       .replace(/('.webm|.avi|.mp4|.mkv|.flv|.wmv')$/i, '')
@@ -145,12 +145,12 @@ function isSubtitleOfAMovie(movieFileName, subtitleFileName) {
   return false
 }
 
-async function getMoviesAndSubtitles(folderPath) {
+async function getMoviesAndSubtitles (folderPath) {
   const movies = await findMoviesRecursive(folderPath)
   return getExistLocalSubtlMovieList(movies)
 }
 
-function fileNameToText(filename) {
+function fileNameToText (filename) {
   let cleanFileName = filename.replace('.mkv', '')
     .replace('.mp4', '')
     .replace('.avi', '')
@@ -164,9 +164,9 @@ function fileNameToText(filename) {
     .replace(/\(.+\)/i, '')
     .replace(/-DL\.DDP2\.0\.H\.264-NTG/i, '')
     .replace(/(\.|_|\s-\s)/g, ' ')
-    .trim();
-  cleanFileName = cleanFileName.split(/(1080)|(720)/)[0];
-  return cleanFileName.trim();
+    .trim()
+  cleanFileName = cleanFileName.split(/(1080)|(720)/)[0]
+  return cleanFileName.trim()
 }
 
 module.exports = {
