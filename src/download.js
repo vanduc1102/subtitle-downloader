@@ -5,12 +5,14 @@ const OpenSubtitles = require('./os-api')
 const CONST = require('./constants')
 const { put } = require('./cache-file')
 
+const ENG_LANG = 'eng'
+
 /**
  * Download subtitle
  * @param {Array} folders List of directory
  * @param {Array} languages List of languageCode, E.g: eng, vie
  */
-async function download (folders, languages = ['eng'], user, pass) {
+async function download (folders, languages = [ENG_LANG], user, pass) {
   console.log(
     'Downloading subtitles for movies:\nFolder:\n',
     folders,
@@ -27,7 +29,10 @@ async function downloadFolder (folderPath, languages, user, pass) {
   const moviesHasSubtitle = []
   const movieNeedSubtitlesMap = new Map()
   movieObjects.forEach((m) => {
-    const missingLanguages = findMissingSubtitle(m, languages)
+    if (m.file.startsWith('._')) {
+      return
+    }
+    const missingLanguages = __findMissingSubtitle(m, languages)
     if (missingLanguages && missingLanguages.length) {
       movieNeedSubtitlesMap.set(m.absolutePath, {
         ...m,
@@ -78,7 +83,9 @@ async function downloadFolder (folderPath, languages, user, pass) {
     console.log('Error', searchResponse)
   }
 
-  const subDescList = searchResponse.data ? __filterByBestScore(searchResponse.data) : []
+  const subDescList = searchResponse.data
+    ? __filterByBestScore(searchResponse.data)
+    : []
   const subDescListFiltered = []
   for (const subDesc of subDescList) {
     const movie = movieHashedList.find(
@@ -97,7 +104,7 @@ async function downloadFolder (folderPath, languages, user, pass) {
     pass
   )
   await isUnAuthorized(subtitlesDataResponse)
-  const subs = __buildSubFileName(
+  const subs = await __buildSubFileName(
     subtitlesDataResponse.data,
     subDescListFiltered
   )
@@ -106,23 +113,25 @@ async function downloadFolder (folderPath, languages, user, pass) {
   }
 }
 
-function __buildSubFileName (subDataList, subDescList) {
+async function __buildSubFileName (subDataList, subDescList) {
   if (!subDataList || subDataList.length === 0) {
     return []
   }
-  const subtitleList = subDataList.map((subData) => {
-    const subDesc = subDescList.find(
-      (subDesc) => subDesc.IDSubtitleFile === subData.idsubtitlefile
-    )
-    return {
-      absoluteFile: __createSubFileName(subDesc),
-      data: subData.data
-    }
-  })
-  return subtitleList
+  return Promise.all(
+    subDataList.map(async (subData) => {
+      const subDesc = subDescList.find(
+        (subDesc) => subDesc.IDSubtitleFile === subData.idsubtitlefile
+      )
+      const absoluteFile = await __createSubFileName(subDesc)
+      return {
+        absoluteFile,
+        data: subData.data
+      }
+    })
+  )
 }
 
-function __createSubFileName (subDesc) {
+async function __createSubFileName (subDesc) {
   const movieFileName = subDesc.absoluteFile
   if (!movieFileName) {
     return subDesc.SubFileName
@@ -130,10 +139,21 @@ function __createSubFileName (subDesc) {
   const movieExtension = subDesc.absoluteFile.substr(
     movieFileName.lastIndexOf('.')
   )
-  return movieFileName.replace(
+
+  const defaultName = movieFileName.replace(
+    movieExtension,
+    '.' + subDesc.SubFormat
+  )
+  if (!(await fileHelper.exists(defaultName))) {
+    return defaultName
+  }
+
+  const nameWithLang = movieFileName.replace(
     movieExtension,
     '.' + subDesc.SubLanguageID + '.' + subDesc.SubFormat
   )
+
+  return nameWithLang
 }
 
 function __filterByBestScore (subDescList) {
@@ -151,20 +171,27 @@ function __filterByBestScore (subDescList) {
   return Object.keys(bestSubOfMovieMap).map((key) => bestSubOfMovieMap[key])
 }
 
-function findMissingSubtitle (movieObject, languages) {
+function __findMissingSubtitle (movieObject, languages) {
   if (!movieObject.subtitles.length) {
     return languages.slice()
   }
   if (languages[0] === 'all') {
     return Object.keys(CONST.languages)
   }
+
   const filteredLang = languages.filter((lang) => {
     const foundSubtitle = movieObject.subtitles.filter((sub) => {
-      return sub.includes(`.${lang}.`)
+      return __isSubtitle(movieObject.file, sub, lang)
     })
     return !foundSubtitle.length
   })
   return filteredLang
+}
+
+function __isSubtitle (moveFilename, subFileName, lang = ENG_LANG) {
+  const m = moveFilename.split('.').slice(0, -1).join('.')
+  const sub = subFileName.split('.').slice(0, -1).join('.')
+  return m === sub || m === `${sub}.${lang}`
 }
 
 async function isUnAuthorized (response) {

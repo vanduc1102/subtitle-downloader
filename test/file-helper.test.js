@@ -1,4 +1,3 @@
-
 const fileHelper = require('../src/file-helper')
 
 describe('file helper', () => {
@@ -43,7 +42,7 @@ describe('file helper', () => {
       'Zone 414 2021',
       'Loki S01E06 For All Time Always DSNP'
     ]
-    const outputs = inputs.map(name => fileHelper.fileNameToText(name))
+    const outputs = inputs.map((name) => fileHelper.fileNameToText(name))
     expect(outputs).toEqual(expectedOutput)
   })
 })

@@ -40,10 +40,15 @@ async function getToken (user = '', pass = '') {
       return response.token
     } else {
       await put('token', '')
-      console.log('Cant authentication to OpenSubtitle, please correct your username and password.')
+      console.log(
+        'Cant authentication to OpenSubtitle, please correct your username and password.'
+      )
     }
   } catch (ex) {
-    console.log('Cant authentication to OpenSubtitle, please correct your username and password.', ex)
+    console.log(
+      'Cant authentication to OpenSubtitle, please correct your username and password.',
+      ex
+    )
   }
 }
 
@@ -77,7 +82,7 @@ function getHashs (movieFiles) {
   if (movieFiles && !movieFiles.length) {
     return []
   }
-  const getHashPromises = movieFiles.map(movieFile => __getHash(movieFile))
+  const getHashPromises = movieFiles.map((movieFile) => __getHash(movieFile))
   return Promise.all(getHashPromises)
 }
 /**
@@ -85,11 +90,14 @@ function getHashs (movieFiles) {
  * @param {Object} movieFile movieFile object contains absolutePath and fileName
  */
 function __getHash (movieFile) {
-  return OpenSubtitles.hash(movieFile.absolutePath).then(response => {
-    response.absoluteFile = movieFile.absolutePath
-    response.filename = movieFile.file
-    return response
-  }, reason => reason)
+  return OpenSubtitles.hash(movieFile.absolutePath).then(
+    (response) => {
+      response.absoluteFile = movieFile.absolutePath
+      response.filename = movieFile.file
+      return response
+    },
+    (reason) => reason
+  )
 }
 
 module.exports = {

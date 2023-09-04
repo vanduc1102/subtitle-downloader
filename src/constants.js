@@ -131,14 +131,9 @@ const langOsToIso = {
   vi: 'vie'
 }
 
-const movieExtensions = [
-  'webm', 'avi', 'mp4',
-  'mkv', 'flv', 'wmv'
-]
+const movieExtensions = ['webm', 'avi', 'mp4', 'mkv', 'flv', 'wmv']
 
-const subtitleExtensions = [
-  'srt', 'sub', 'sbv'
-]
+const subtitleExtensions = ['srt', 'sub', 'sbv']
 
 module.exports = {
   movieExtensions,

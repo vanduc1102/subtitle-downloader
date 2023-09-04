@@ -1,9 +1,6 @@
 const os = require('os')
 const path = require('path')
-const {
-  writeString,
-  readString
-} = require('./file-helper')
+const { writeString, readString } = require('./file-helper')
 
 const CACHE_FILE_PREFIX = 'subtitle-downloader'
 
@@ -14,8 +11,9 @@ const CACHE_FILE_PREFIX = 'subtitle-downloader'
  */
 async function put (key, value) {
   return writeString(
-    path.resolve(os.tmpdir(), `${CACHE_FILE_PREFIX}-${key}`)
-    , JSON.stringify({ value }))
+    path.resolve(os.tmpdir(), `${CACHE_FILE_PREFIX}-${key}`),
+    JSON.stringify({ value })
+  )
 }
 
 /**
@@ -24,12 +22,12 @@ async function put (key, value) {
  */
 async function get (key) {
   const data = await readString(
-    path.resolve(os.tmpdir()
-      , `${CACHE_FILE_PREFIX}-${key}`
-    ))
+    path.resolve(os.tmpdir(), `${CACHE_FILE_PREFIX}-${key}`)
+  )
   return data ? JSON.parse(data).value : null
 }
 
 module.exports = {
-  put, get
+  put,
+  get
 }

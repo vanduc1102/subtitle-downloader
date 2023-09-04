@@ -18,12 +18,10 @@ async function findMoviesRecursive (folderPath, result = []) {
     const absolutePath = path.resolve(folderPath, file)
     const fileStat = await fsPromise.stat(absolutePath)
 
-    if (fileStat &&
-      fileStat.isDirectory() &&
-      !isExcludedFolder(file)) {
-      const subfiles = await findMoviesRecursive(absolutePath)
-      if (subfiles.length) {
-        result = [...result, ...subfiles]
+    if (fileStat && fileStat.isDirectory() && !isExcludedFolder(file)) {
+      const subFiles = await findMoviesRecursive(absolutePath)
+      if (subFiles.length) {
+        result = [...result, ...subFiles]
       }
     } else if (isMovie(file)) {
       result.push({
@@ -32,7 +30,7 @@ async function findMoviesRecursive (folderPath, result = []) {
         absolutePath
       })
     }
-  };
+  }
 
   return result
 }
@@ -56,9 +54,12 @@ async function getExistLocalSubtlMovie (movieObject) {
   for (const file of files) {
     const filePath = path.resolve(movieObject.folder, file)
     const fileStat = await fsPromise.stat(filePath)
-    if (fileStat && !fileStat.isDirectory() &&
+    if (
+      fileStat &&
+      !fileStat.isDirectory() &&
       !isMovie(file) &&
-      isSubtitleOfAMovie(movieObject.file, file)) {
+      isSubtitleOfAMovie(movieObject.file, file)
+    ) {
       subtitles.push(file)
     }
   }
@@ -71,14 +72,19 @@ async function getExistLocalSubtlMovie (movieObject) {
 
 function writeString (filePath, strContent) {
   return new Promise((resolve, reject) => {
-    fs.writeFile(path.resolve(filePath), strContent, {
-      flag: 'w+'
-    }, function (err) {
-      if (err) {
-        return reject(err)
+    fs.writeFile(
+      path.resolve(filePath),
+      strContent,
+      {
+        flag: 'w+'
+      },
+      function (err) {
+        if (err) {
+          return reject(err)
+        }
+        resolve(filePath)
       }
-      resolve(filePath)
-    })
+    )
   })
 }
 
@@ -94,6 +100,10 @@ async function readString (filePath) {
 }
 
 function unZippedBase64 (zippedBase64, filePath) {
+  if (!zippedBase64) {
+    console.log('Error: No data received for path: ' + filePath)
+    return
+  }
   return new Promise((resolve, reject) => {
     const bufZipped = Buffer.from(zippedBase64, 'base64')
     zlib.gunzip(bufZipped, function (err, buf) {
@@ -120,7 +130,10 @@ function __createUniquePath (absolutePath) {
     return absolutePath
   }
   const extension = absolutePath.substr(absolutePath.lastIndexOf('.'))
-  absolutePath = absolutePath.replace(extension, `.${Date.now() % 100}${extension}`)
+  absolutePath = absolutePath.replace(
+    extension,
+    `.${Date.now() % 100}${extension}`
+  )
   return __createUniquePath(absolutePath)
 }
 
@@ -138,8 +151,10 @@ function isSubtitleFile (fileName) {
 
 function isSubtitleOfAMovie (movieFileName, subtitleFileName) {
   if (isSubtitleFile(subtitleFileName)) {
-    const movieName = movieFileName
-      .replace(/('.webm|.avi|.mp4|.mkv|.flv|.wmv')$/i, '')
+    const movieName = movieFileName.replace(
+      /('.webm|.avi|.mp4|.mkv|.flv|.wmv')$/i,
+      ''
+    )
     return subtitleFileName.includes(movieName)
   }
   return false
@@ -151,7 +166,8 @@ async function getMoviesAndSubtitles (folderPath) {
 }
 
 function fileNameToText (filename) {
-  let cleanFileName = filename.replace('.mkv', '')
+  let cleanFileName = filename
+    .replace('.mkv', '')
     .replace('.mp4', '')
     .replace('.avi', '')
     .replace(/-GalaxyTV/i, '')
@@ -169,10 +185,15 @@ function fileNameToText (filename) {
   return cleanFileName.trim()
 }
 
+async function exists (absolutePath = '') {
+  return fsPromise.access(absolutePath).then(() => true).catch(() => false)
+}
+
 module.exports = {
   getMoviesAndSubtitles,
   unZippedBase64,
   writeString,
   readString,
-  fileNameToText
+  fileNameToText,
+  exists
 }

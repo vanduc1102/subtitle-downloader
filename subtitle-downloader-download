@@ -22,7 +22,9 @@ async function callDownload (directory, options) {
   try {
     const langs = options.lang ? options.lang.split(',') : ['eng']
     const directories = program.args
-    await download(directories, langs, options.user, options.pass)
+    const username = options.user || process.env.OS_USERNAME
+    const password = options.pass || process.env.OS_PASSWORD
+    await download(directories, langs, username, password)
   } catch (ex) {
     console.error(ex)
     console.log('Something wrong, please try: \n$ subtitle-downloader download --help')
