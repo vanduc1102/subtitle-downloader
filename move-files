@@ -1,67 +1,67 @@
 #!/usr/bin/env node
 
-const program = require('commander')
-const { resolve, extname, basename, join } = require('path')
-const { readdir, rename } = require('fs').promises;
+const program = require("commander");
+const { resolve, extname, basename, join } = require("path");
+const { readdir, rename } = require("fs").promises;
 
 program
   .option(
-    '-ext, --extension [value]',
-    'List of extension files. Comma separated'
+    "-ext, --extension [value]",
+    "List of extension files. Comma separated",
   )
-  .parse(process.argv)
+  .parse(process.argv);
 
-program.on('--help', function () {
-  console.log('')
-  console.log('Examples:')
-  console.log('  $ move-files ~/Downloads -ext mp4,srt')
+program.on("--help", function () {
+  console.log("");
+  console.log("Examples:");
+  console.log("  $ move-files ~/Downloads -ext mp4,srt");
 });
 
 (async () => {
-  moveFiles(program.args, program.options)
-})()
+  moveFiles(program.args, program.options);
+})();
 
 async function moveFiles(directories, options) {
   const extensions = options.ext
-    ? options.ext.split('')
-    : ['.mp4', '.srt', '.avi', '.mkv']
+    ? options.ext.split("")
+    : [".mp4", ".srt", ".avi", ".mkv"];
   return Promise.all(
     directories.map(async (d) => {
-      let files = await getFiles(d)
-      files = filterValidFiles(files, extensions)
+      let files = await getFiles(d);
+      files = filterValidFiles(files, extensions);
       return Promise.all(
         files.map((f) => {
-          const filename = basename(f)
-          const newFilePath = join(d, filename)
-          console.log('New File Path: ', newFilePath)
-          return rename(f, newFilePath)
-        })
-      )
-    })
-  )
+          const filename = basename(f);
+          const newFilePath = join(d, filename);
+          console.log("New File Path: ", newFilePath);
+          return rename(f, newFilePath);
+        }),
+      );
+    }),
+  );
 }
 
 async function getFiles(dir) {
-  const directoryList = await readdir(dir, { withFileTypes: true })
+  const directoryList = await readdir(dir, { withFileTypes: true });
   const files = await Promise.all(
     directoryList.map((dirent) => {
-      const res = resolve(dir, dirent.name)
-      return dirent.isDirectory() ? getFiles(res) : res
-    })
-  )
-  return Array.prototype.concat(...files)
+      const res = resolve(dir, dirent.name);
+      return dirent.isDirectory() ? getFiles(res) : res;
+    }),
+  );
+  return Array.prototype.concat(...files);
 }
 
 function filterValidFiles(files, extensions) {
   return files.filter((f) => {
-    if (typeof f !== 'string') {
-      return false
+    if (typeof f !== "string") {
+      return false;
     }
-    const fileExtension = extname(f) || ''
-    const fileBaseName = basename(f) || ''
+    const fileExtension = extname(f) || "";
+    const fileBaseName = basename(f) || "";
     return (
-      !fileBaseName.startsWith('.') &&
+      !fileBaseName.startsWith(".") &&
       extensions.includes(fileExtension.toLowerCase())
-    )
-  })
+    );
+  });
 }

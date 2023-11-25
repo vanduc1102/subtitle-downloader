@@ -1,4 +1,4 @@
-const fileHelper = require('../src/file-helper')
+import fileHelper from '../src/file-helper';
 
 describe('file helper', () => {
   test('fileNameToText', () => {
@@ -20,8 +20,8 @@ describe('file helper', () => {
       'When.Harry.Met.Sally....1989.1080p.BluRay.x264-[YTS.AM].mp4',
       'Youve.Got.Mail.1998.1080p.BrRip.x264.YIFY.mp4',
       'Zone.414.2021.1080p.AMZN.WEBRip.DDP5.1.x264-NOGRP.mkv',
-      'Loki.S01E06.For.All.Time.Always.DSNP.1080p.DDP.5.1.x265.[HashMiner].mkv'
-    ]
+      'Loki.S01E06.For.All.Time.Always.DSNP.1080p.DDP.5.1.x265.[HashMiner].mkv',
+    ];
     const expectedOutput = [
       'A Rainy Day In New York 2019',
       'Elvis and Anabelle 2007',
@@ -40,9 +40,9 @@ describe('file helper', () => {
       'When Harry Met Sally    1989',
       'Youve Got Mail 1998',
       'Zone 414 2021',
-      'Loki S01E06 For All Time Always DSNP'
-    ]
-    const outputs = inputs.map((name) => fileHelper.fileNameToText(name))
-    expect(outputs).toEqual(expectedOutput)
-  })
-})
+      'Loki S01E06 For All Time Always DSNP',
+    ];
+    const outputs = inputs.map((name) => fileHelper.fileNameToText(name));
+    expect(outputs).toEqual(expectedOutput);
+  });
+});

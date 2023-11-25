@@ -62,8 +62,8 @@ const languages = {
   tur: 'Turkish',
   ukr: 'Ukrainian',
   urd: 'Urdu',
-  vie: 'Vietnamese'
-}
+  vie: 'Vietnamese',
+};
 
 const langOsToIso = {
   sq: 'alb',
@@ -128,16 +128,16 @@ const langOsToIso = {
   tr: 'tur',
   uk: 'ukr',
   ur: 'urd',
-  vi: 'vie'
-}
+  vi: 'vie',
+};
 
-const movieExtensions = ['webm', 'avi', 'mp4', 'mkv', 'flv', 'wmv']
+const movieExtensions = ['webm', 'avi', 'mp4', 'mkv', 'flv', 'wmv'];
 
-const subtitleExtensions = ['srt', 'sub', 'sbv']
+const subtitleExtensions = ['srt', 'sub', 'sbv'];
 
-module.exports = {
+export default {
   movieExtensions,
   subtitleExtensions,
   languages,
-  langOsToIso
-}
+  langOsToIso,
+};

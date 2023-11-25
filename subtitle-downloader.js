@@ -1,14 +1,17 @@
 #!/usr/bin/env node
 
-'use strict'
+import { Command } from 'commander';
 
-require('dotenv').config()
+import dotenv from 'dotenv';
 
-const program = require('commander')
-const pkg = require('./package.json')
+import pkg from './package.json' assert { type: 'json' };
+
+dotenv.config();
+
+const program = new Command();
 
 program
   .version(pkg.version, '-v, --version')
   .command('download <directory>', 'Download subtitles for movies.')
   .command('upload <directory>', 'Upload subtitles to OpenSubtitle.')
-  .parse(process.argv)
+  .parse(process.argv);

@@ -85,3 +85,4 @@ mongod
 
 package-lock.json
 .env
+local-*

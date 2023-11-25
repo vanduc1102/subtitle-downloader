@@ -1,33 +1,32 @@
-const os = require('os')
-const path = require('path')
-const { writeString, readString } = require('./file-helper')
+import os from 'os';
+import path from 'path';
+import fileHelper from './file-helper.js';
 
-const CACHE_FILE_PREFIX = 'subtitle-downloader'
+const CACHE_FILE_PREFIX = 'subtitle-downloader';
 
 /**
  * Store value in cache file.
  * @param {String} key Key of cache
  * @param {Object} value Value to cache
  */
-async function put (key, value) {
-  return writeString(
+export async function put(key, value) {
+  return fileHelper.writeString(
     path.resolve(os.tmpdir(), `${CACHE_FILE_PREFIX}-${key}`),
-    JSON.stringify({ value })
-  )
+    JSON.stringify({ value }),
+  );
 }
 
 /**
  *
  * @param {String} key Key of cached
  */
-async function get (key) {
-  const data = await readString(
-    path.resolve(os.tmpdir(), `${CACHE_FILE_PREFIX}-${key}`)
-  )
-  return data ? JSON.parse(data).value : null
-}
-
-module.exports = {
-  put,
-  get
+export async function get(key) {
+  try {
+    const data = await fileHelper.readString(
+      path.resolve(os.tmpdir(), `${CACHE_FILE_PREFIX}-${key}`),
+    );
+    return data ? JSON.parse(data).value : null;
+  } catch (error) {
+    return null;
+  }
 }
